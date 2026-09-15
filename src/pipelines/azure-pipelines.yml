@@ -1,0 +1,41 @@
+trigger:
+  branches:
+    include: [main]
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  acrName: acrcontainerappsdemo
+  imageName: my-app
+  resourceGroup: rg-containerapps
+  containerAppName: my-containerapp
+
+stages:
+  - stage: BuildAndPush
+    jobs:
+      - job: Build
+        steps:
+          - task: Docker@2
+            inputs:
+              containerRegistry: 'acr-service-connection'
+              repository: '$(imageName)'
+              command: 'buildAndPush'
+              Dockerfile: '**/Dockerfile'
+              tags: '$(Build.BuildId)'
+
+  - stage: Deploy
+    dependsOn: BuildAndPush
+    jobs:
+      - job: DeployContainerApp
+        steps:
+          - task: AzureCLI@2
+            inputs:
+              azureSubscription: 'azure-service-connection'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az containerapp update \
+                  --resource-group $(resourceGroup) \
+                  --name $(containerAppName) \
+                  --image $(acrName).azurecr.io/$(imageName):$(Build.BuildId)
