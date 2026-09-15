@@ -15,6 +15,11 @@ az containerapp revision set-mode \
   --name "$APP_NAME" \
   --mode Multiple
 
+REVISION_NAMES=$(az containerapp revision list \
+  --resource-group "$RESOURCE_GROUP" \
+  --name "$APP_NAME" \
+  --query "[].name" -o tsv)
+
 echo "Current revisions:"
 az containerapp revision list \
   --resource-group "$RESOURCE_GROUP" \
@@ -22,9 +27,21 @@ az containerapp revision list \
   --query "[].{Name:name, Active:properties.active, Traffic:properties.trafficWeight, Created:properties.createdTime}" \
   -o table
 
+validate_revision() {
+  local name="$1"
+  if ! grep -qxF "$name" <<< "$REVISION_NAMES"; then
+    echo "Error: '$name' is not a revision of $APP_NAME. Valid revisions:" >&2
+    echo "$REVISION_NAMES" >&2
+    exit 1
+  fi
+}
+
 echo
 read -r -p "Revision name to roll back to (100% traffic): " TARGET_REVISION
+validate_revision "$TARGET_REVISION"
+
 read -r -p "Revision name currently receiving traffic to remove (0%): " BROKEN_REVISION
+validate_revision "$BROKEN_REVISION"
 
 az containerapp ingress traffic set \
   --resource-group "$RESOURCE_GROUP" \
