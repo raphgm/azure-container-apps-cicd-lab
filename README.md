@@ -8,7 +8,7 @@ Every `az containerapp` / `az acr` command in this repo was verified against a r
 
 ---
 
-## 🎯 Architecture
+## Architecture
 
 ```mermaid
 flowchart TD
@@ -23,7 +23,7 @@ flowchart TD
 
 ---
 
-## 📚 Repository Structure
+## Repository Structure
 
 ```text
 .
@@ -41,7 +41,7 @@ flowchart TD
 
 ---
 
-## 🛠️ Quick Start
+## Quick Start
 
 ### 1. Provision the environment (Bicep)
 
